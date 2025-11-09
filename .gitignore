@@ -54,3 +54,6 @@ htmlcov/
 .mypy_cache/
 .dmypy.json
 dmypy.json
+
+# Character Development Data
+backend/character_data/

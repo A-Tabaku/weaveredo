@@ -8,6 +8,7 @@ import os
 from dotenv import load_dotenv
 from agent_types import AgentLevel
 from agents.Intro_General_Entry.agent import EntryAgent
+from agents.Character_Identity.agent import CharacterIdentityAgent
 
 
 async def main():
@@ -81,9 +82,7 @@ def get_agent_by_level(level: int, api_key: str):
     if agent_level == AgentLevel.Intro_General_Entry:
         return EntryAgent(api_key=api_key, level=agent_level)
     elif agent_level == AgentLevel.Character_Identity:
-        # TODO: return CharacterIdentityAgent(api_key=api_key, level=agent_level)
-        print("Character_Identity agent not yet implemented, using ExampleAgent")
-        return ExampleAgent(api_key=api_key, level=agent_level)
+        return CharacterIdentityAgent(api_key=api_key, level=agent_level)
     elif agent_level == AgentLevel.Scene_Creator:
         # TODO: return SceneCreatorAgent(api_key=api_key, level=agent_level)
         print("Scene_Creator agent not yet implemented, using ExampleAgent")

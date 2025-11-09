@@ -3,6 +3,16 @@
 # Anthropic API
 anthropic>=0.39.0
 
-# For API layer (uncomment when implementing frontend integration)
-# fastapi>=0.104.0
-# uvicorn>=0.24.0
+# Environment variables
+python-dotenv>=1.0.0
+
+# API layer for Character Development System
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+websockets>=12.0
+
+# Google Gemini API for image generation
+google-generativeai>=0.3.0
+
+# Image processing
+pillow>=10.0.0
