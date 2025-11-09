@@ -184,9 +184,22 @@ app = FastAPI(
 )
 
 # CORS middleware
+# Get frontend URL from environment for production deployment
+frontend_url = os.getenv("FRONTEND_URL", "http://localhost:3000")
+allowed_origins = [
+    "http://localhost:5173",
+    "http://localhost:3000",
+    frontend_url,
+]
+# Add production domain pattern if FRONTEND_URL is set
+if "emergent" in frontend_url or "preview" in frontend_url:
+    # Allow both http and https variants
+    allowed_origins.append(frontend_url.replace("http://", "https://"))
+    allowed_origins.append(frontend_url.replace("https://", "http://"))
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:3000"],  # Frontend URLs
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
