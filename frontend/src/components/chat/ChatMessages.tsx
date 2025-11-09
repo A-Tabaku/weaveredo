@@ -72,7 +72,7 @@ export function ChatMessages() {
                 🤖
               </div>
               <div className="text-[11px] text-text-tertiary uppercase tracking-wider font-medium">
-                AGENT
+                WEAVE
               </div>
             </div>
             <div className="text-sm text-text-primary leading-relaxed whitespace-pre-wrap">
