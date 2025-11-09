@@ -13,6 +13,7 @@ interface WeaveStore {
   // Chat state
   messages: ChatMessage[];
   addMessage: (message: Omit<ChatMessage, 'id' | 'timestamp'>) => void;
+  removeMessage: (id: string) => void;
   clearMessages: () => void;
 
   // UI state
