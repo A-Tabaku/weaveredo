@@ -26,11 +26,10 @@ env/
 ENV/
 .venv
 
-# Environment Variables - NEVER commit API keys!
+# Environment Variables
 .env
 .env.local
 .env.*.local
-local.env
 
 # IDE
 .vscode/
@@ -58,7 +57,15 @@ test_*.py
 .mypy_cache/
 .dmypy.json
 dmypy.json
-
-# State files (optional - you may want to track these)
-backend/state/projects/*.json
-backend/state/scenes/*.json
+-e 
+# Environment files
+*.env
+*.env.*
+-e 
+# Environment files
+*.env
+*.env.*
+-e 
+# Environment files
+*.env
+*.env.*
