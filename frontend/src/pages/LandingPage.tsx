@@ -74,9 +74,9 @@ export function LandingPage() {
       </section>
 
       {/* Technology Showcase Section */}
-      <section className="relative py-32 px-6 overflow-hidden">
+      <section className="relative py-32 px-6">
         {/* Animated background elements */}
-        <div className="absolute inset-0 flex items-center justify-center opacity-30">
+        <div className="absolute inset-0 flex items-center justify-center opacity-30 pointer-events-none overflow-hidden">
           <motion.div
             animate={{
               scale: [1, 1.2, 1],
