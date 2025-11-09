@@ -666,7 +666,8 @@ async def get_entry_status(session_id: str):
 # SCENE CREATOR ENDPOINTS
 # ============================================================================
 
-from agents.Scene_Creator.agent import SceneCreatorAgent
+# TODO: Scene Creator needs utils module - temporarily disabled
+# from agents.Scene_Creator.agent import SceneCreatorAgent
 
 # Store active scene sessions
 scene_sessions: Dict[str, Dict] = {}
