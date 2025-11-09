@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useStore } from '../../store/useStore';
 
 export function ChatInput() {
-  const { addMessage, selectedNodeId, nodes } = useStore();
+  const { addMessage, removeMessage, selectedNodeId, nodes } = useStore();
   const [input, setInput] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -26,27 +26,34 @@ export function ChatInput() {
       content: message,
     });
 
-    // Add typing indicator
-    const typingMessageId = Math.random().toString(36).substr(2, 9);
-    addMessage({
-      type: 'typing',
-      content: '',
+    // Add typing indicator with a known ID so we can remove it later
+    const typingMessageId = 'typing-' + Date.now();
+    
+    // We need to manually add with specific ID
+    const typingMessage = {
       id: typingMessageId,
-    });
+      type: 'typing' as const,
+      content: '',
+      timestamp: new Date(),
+    };
+    
+    useStore.setState((state) => ({
+      messages: [...state.messages, typingMessage],
+    }));
 
     // 4-second delay with typing animation
     setTimeout(() => {
-      // Remove typing indicator (by replacing messages without it)
-      const { messages, addMessage: add } = useStore.getState();
-      const filteredMessages = messages.filter(msg => msg.id !== typingMessageId);
-      useStore.setState({ messages: filteredMessages });
-
-      // Add automatic 429 error response
-      addMessage({
-        type: 'agent',
-        content: ANTHROPIC_429_ERROR,
-      });
-      setIsProcessing(false);
+      // Remove typing indicator
+      removeMessage(typingMessageId);
+      
+      // Add automatic 429 error response immediately after
+      setTimeout(() => {
+        addMessage({
+          type: 'agent',
+          content: ANTHROPIC_429_ERROR,
+        });
+        setIsProcessing(false);
+      }, 100);
     }, 4000);
   };
 
