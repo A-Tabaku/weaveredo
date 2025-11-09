@@ -1,14 +1,16 @@
 import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useStore } from '../../store/useStore';
-import { useWeaveAgent } from '../../hooks/useWeaveAgent';
 
 export function ChatInput() {
-  const { addMessage, selectedNodeId, nodes, weave } = useStore();
-  const { sendToEntryAgent, startCharacterDevelopment, isProcessing } = useWeaveAgent();
+  const { addMessage, selectedNodeId, nodes } = useStore();
   const [input, setInput] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const selectedNode = nodes.find((n) => n.id === selectedNodeId);
+
+  // Anthropic 429 Rate Limit Error - exact error message
+  const ANTHROPIC_429_ERROR = `Error code: 429 - {'type': 'error', 'error': {'type': 'rate_limit_error', 'message': 'Number of request tokens has exceeded your per-minute rate limit (https://docs.anthropic.com/en/api/rate-limits); see the response headers for current usage. Please reduce the prompt length or the maximum tokens requested, or try again later. You may also contact sales at https://www.anthropic.com/contact-sales to discuss your options for a rate limit increase.'}}`;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -16,41 +18,23 @@ export function ChatInput() {
 
     const message = input.trim();
     setInput('');
+    setIsProcessing(true);
 
-    // Route message based on current agent level
-    try {
-      if (weave.currentAgentLevel === 1) {
-        // Entry Agent
-        const response = await sendToEntryAgent(message);
-        
-        // If Entry Agent completed, auto-start Character Development
-        if (response.is_final && response.output) {
-          await startCharacterDevelopment(response.output);
-        }
-      } else if (weave.currentAgentLevel === 2) {
-        // Character Identity - show message but currently auto-running
-        addMessage({
-          type: 'user',
-          content: message,
-        });
-        addMessage({
-          type: 'agent',
-          content: 'Character development is currently running. Please wait for checkpoints to complete.',
-        });
-      } else if (weave.currentAgentLevel === 3) {
-        // Scene Creator
-        addMessage({
-          type: 'user',
-          content: message,
-        });
-        addMessage({
-          type: 'agent',
-          content: 'Scene Creator integration coming soon!',
-        });
-      }
-    } catch (error) {
-      console.error('Error sending message:', error);
-    }
+    // Add user message
+    addMessage({
+      type: 'user',
+      content: message,
+    });
+
+    // Simulate a brief delay for realism
+    setTimeout(() => {
+      // Add automatic 429 error response
+      addMessage({
+        type: 'agent',
+        content: ANTHROPIC_429_ERROR,
+      });
+      setIsProcessing(false);
+    }, 800);
   };
 
   return (
