@@ -4,7 +4,9 @@
 
 import type { WebSocketMessageType } from './weaveApi';
 
-const WS_BASE_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:8000';
+const WS_BASE_URL = import.meta.env.VITE_APP_URL 
+  ? import.meta.env.VITE_APP_URL.replace('https://', 'wss://').replace('http://', 'ws://')
+  : 'ws://localhost:8000';
 
 export class CharacterWebSocket {
   private ws: WebSocket | null = null;
