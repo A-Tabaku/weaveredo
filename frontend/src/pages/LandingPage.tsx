@@ -146,11 +146,14 @@ export function LandingPage() {
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: 0.2 }}
-              className="text-6xl font-bold mb-6 bg-gradient-to-r from-text-primary via-accent-purple to-text-primary bg-clip-text text-transparent"
+              className="text-6xl font-bold mb-6 bg-gradient-to-r from-text-primary via-accent-purple to-text-primary bg-clip-text text-transparent leading-tight"
+              style={{ paddingBottom: '0.5rem' }}
             >
               Videography & Cinema
               <br />
-              <span className="text-5xl">Now Only a Keystroke Away</span>
+              <span className="text-5xl inline-block" style={{ paddingBottom: '0.5rem', lineHeight: '1.3' }}>
+                Now Only a Keystroke Away
+              </span>
             </motion.h2>
             <motion.p
               initial={{ opacity: 0 }}
