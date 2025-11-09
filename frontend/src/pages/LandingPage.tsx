@@ -73,6 +73,192 @@ export function LandingPage() {
         </div>
       </section>
 
+      {/* Technology Showcase Section */}
+      <section className="relative py-32 px-6 overflow-hidden">
+        {/* Animated background elements */}
+        <div className="absolute inset-0 flex items-center justify-center opacity-30">
+          <motion.div
+            animate={{
+              scale: [1, 1.2, 1],
+              rotate: [0, 180, 360],
+            }}
+            transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+            className="w-96 h-96 border border-accent-purple/30 rounded-full"
+          />
+          <motion.div
+            animate={{
+              scale: [1, 0.8, 1],
+              rotate: [360, 180, 0],
+            }}
+            transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+            className="absolute w-64 h-64 border border-status-active/30 rounded-full"
+          />
+        </div>
+
+        <div className="max-w-6xl mx-auto relative z-10">
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+            className="text-center mb-16"
+          >
+            <motion.h2
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="text-6xl font-bold mb-6 bg-gradient-to-r from-text-primary via-accent-purple to-text-primary bg-clip-text text-transparent"
+            >
+              Videography & Cinema
+              <br />
+              <span className="text-5xl">Now Only a Keystroke Away</span>
+            </motion.h2>
+            <motion.p
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+              className="text-xl text-text-secondary max-w-3xl mx-auto leading-relaxed"
+            >
+              Powered by cutting-edge agentic AI architecture, Weave transforms simple text into
+              production-ready video content—complete with character depth, scene choreography,
+              and narrative continuity.
+            </motion.p>
+          </motion.div>
+
+          {/* Animated node network visualization */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8, delay: 0.3 }}
+            className="relative h-80 mb-16"
+          >
+            <div className="absolute inset-0 flex items-center justify-center">
+              {/* Central hub */}
+              <motion.div
+                animate={{
+                  boxShadow: [
+                    '0 0 20px rgba(139, 92, 246, 0.5)',
+                    '0 0 40px rgba(139, 92, 246, 0.8)',
+                    '0 0 20px rgba(139, 92, 246, 0.5)',
+                  ],
+                }}
+                transition={{ duration: 2, repeat: Infinity }}
+                className="absolute w-24 h-24 bg-gradient-to-br from-accent-purple to-status-active rounded-2xl flex items-center justify-center text-3xl font-bold z-10"
+              >
+                AI
+              </motion.div>
+
+              {/* Orbiting nodes */}
+              {[
+                { icon: '🎭', label: 'Characters', angle: 0, color: 'from-accent-purple/20 to-accent-purple/5', delay: 0 },
+                { icon: '🎬', label: 'Scenes', angle: 90, color: 'from-status-warning/20 to-status-warning/5', delay: 0.5 },
+                { icon: '💬', label: 'Dialogue', angle: 180, color: 'from-status-active/20 to-status-active/5', delay: 1 },
+                { icon: '🎨', label: 'Style', angle: 270, color: 'from-status-success/20 to-status-success/5', delay: 1.5 },
+              ].map((node, i) => {
+                const radius = 150;
+                const x = Math.cos((node.angle * Math.PI) / 180) * radius;
+                const y = Math.sin((node.angle * Math.PI) / 180) * radius;
+
+                return (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, scale: 0 }}
+                    whileInView={{ opacity: 1, scale: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5, delay: 0.5 + node.delay }}
+                    animate={{
+                      x: [x, x * 1.1, x],
+                      y: [y, y * 1.1, y],
+                    }}
+                    style={{
+                      position: 'absolute',
+                      left: '50%',
+                      top: '50%',
+                      transform: `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`,
+                    }}
+                    className={`w-20 h-20 bg-gradient-to-br ${node.color} border border-accent-purple/30 rounded-xl flex flex-col items-center justify-center`}
+                  >
+                    <div className="text-2xl mb-1">{node.icon}</div>
+                    <div className="text-xs text-text-secondary font-semibold">{node.label}</div>
+                  </motion.div>
+                );
+              })}
+
+              {/* Connecting lines */}
+              {[0, 90, 180, 270].map((angle, i) => {
+                const rotation = angle;
+                return (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, scaleX: 0 }}
+                    whileInView={{ opacity: 0.3, scaleX: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.8, delay: 0.8 + i * 0.1 }}
+                    className="absolute w-32 h-0.5 bg-gradient-to-r from-accent-purple to-transparent"
+                    style={{
+                      left: '50%',
+                      top: '50%',
+                      transformOrigin: 'left center',
+                      transform: `rotate(${rotation}deg)`,
+                    }}
+                  />
+                );
+              })}
+            </div>
+          </motion.div>
+
+          {/* Technology stats */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.5 }}
+            className="grid md:grid-cols-3 gap-6 mb-12"
+          >
+            {[
+              { label: 'AI Agents', value: '3+', description: 'Specialized orchestrators' },
+              { label: 'Checkpoints', value: '7+', description: 'Quality control gates' },
+              { label: 'Real-time', value: '100%', description: 'Transparent generation' },
+            ].map((stat, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, scale: 0.9 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.7 + i * 0.1 }}
+                className="text-center p-6 bg-bg-secondary/50 backdrop-blur-sm border border-accent-purple/20 rounded-xl"
+              >
+                <div className="text-4xl font-bold text-accent-purple mb-2">{stat.value}</div>
+                <div className="text-lg font-semibold text-text-primary mb-1">{stat.label}</div>
+                <div className="text-sm text-text-tertiary">{stat.description}</div>
+              </motion.div>
+            ))}
+          </motion.div>
+
+          {/* CTA Button */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.8 }}
+            className="text-center"
+          >
+            <motion.button
+              whileHover={{ scale: 1.05, boxShadow: '0 0 40px rgba(139, 92, 246, 0.6)' }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => navigate('/studio')}
+              className="px-12 py-5 bg-gradient-to-r from-accent-purple to-status-active text-white text-lg font-semibold rounded-xl shadow-lg transition-all duration-300"
+              style={{ boxShadow: '0 0 30px rgba(139, 92, 246, 0.4)' }}
+            >
+              Experience It Now →
+            </motion.button>
+          </motion.div>
+        </div>
+      </section>
+
       {/* How It Works Section */}
       <section className="relative py-32 px-6">
         <div className="max-w-6xl mx-auto">
