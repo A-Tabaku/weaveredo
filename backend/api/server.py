@@ -713,17 +713,13 @@ async def switch_scene_mode(project_id: str, request: SceneModeRequest):
 
 @app.get("/api/scene/{project_id}/status")
 async def get_scene_status(project_id: str):
-    """Get Scene Creator session status"""
-    if project_id not in scene_sessions:
-        raise HTTPException(status_code=404, detail="Scene session not found")
-
-    session = scene_sessions[project_id]
+    """Get Scene Creator session status - TEMPORARILY DISABLED"""
     return {
         "project_id": project_id,
-        "status": session["status"],
-        "mode": session["current_mode"],
-        "message_count": len(session["conversation_history"]),
-        "scene_count": len(session["scenes"])
+        "status": "disabled",
+        "mode": "disabled",
+        "message_count": 0,
+        "scene_count": 0
     }
 
 
