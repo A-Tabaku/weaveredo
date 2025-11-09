@@ -6,6 +6,7 @@ import { StatusBar } from './components/layout/StatusBar';
 import { CommandPalette } from './components/common/CommandPalette';
 import { NewProjectModal } from './components/common/NewProjectModal';
 import { useStore } from './store/useStore';
+import { useWeaveAgent } from './hooks/useWeaveAgent';
 
 function App() {
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
@@ -14,6 +15,17 @@ function App() {
   
   const leftPanelWidth = useStore((state) => state.leftPanelWidth);
   const setLeftPanelWidth = useStore((state) => state.setLeftPanelWidth);
+  const initializeAgentTree = useStore((state) => state.initializeAgentTree);
+  const { startEntryAgent } = useWeaveAgent();
+
+  // Initialize agent tree on mount
+  useEffect(() => {
+    initializeAgentTree();
+    // Auto-start Entry Agent
+    startEntryAgent().catch((error) => {
+      console.error('Failed to auto-start entry agent:', error);
+    });
+  }, [initializeAgentTree, startEntryAgent]);
 
   // Keyboard shortcuts
   useEffect(() => {
