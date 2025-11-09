@@ -10,7 +10,7 @@ Develops character's interpersonal connections including:
 
 import json
 from typing import Tuple, List
-from anthropic import Anthropic
+from anthropic import AsyncAnthropic  # FIX: Use AsyncAnthropic for async functions
 
 from ..schemas import CharacterKnowledgeBase, RelationshipsOutput, Relationship
 
@@ -29,8 +29,8 @@ async def relationships_agent(
     Returns:
         Tuple of (RelationshipsOutput, narrative_description)
     """
-    client = Anthropic(api_key=api_key)
-    model = "claude-sonnet-4-5-20250929"
+    client = AsyncAnthropic(api_key=api_key)  # FIX: Use AsyncAnthropic
+    model = "claude-haiku-4-5-20251001"
 
     # Extract data
     character = kb["input_data"]["characters"][0]
@@ -49,9 +49,18 @@ async def relationships_agent(
 
     if kb.get("backstory_motivation"):
         b = kb["backstory_motivation"]
+
+        # Handle both old (List[str]) and new (List[InternalConflict]) formats for internal_conflicts
+        if b["internal_conflicts"] and isinstance(b["internal_conflicts"][0], dict):
+            # New format: List[InternalConflict] with "conflict" and "description" keys
+            conflicts_str = ", ".join([ic["conflict"] for ic in b["internal_conflicts"]])
+        else:
+            # Old format: List[str]
+            conflicts_str = ", ".join(b["internal_conflicts"])
+
         context_blocks.append(f"""BACKSTORY:
 - Key Events: {", ".join([e.get("event", "")[:60] for e in b["timeline"][:3]])}
-- Internal Conflicts: {", ".join(b["internal_conflicts"])}
+- Internal Conflicts: {conflicts_str}
 (Past shapes relationship patterns)""")
 
     if kb.get("story_arc"):
@@ -130,8 +139,8 @@ STRUCTURED:
   ]
 }}"""
 
-    # Make API call
-    response = client.messages.create(
+    # Make API call (FIX: Add await for async client)
+    response = await client.messages.create(
         model=model,
         max_tokens=4500,
         temperature=0.7,

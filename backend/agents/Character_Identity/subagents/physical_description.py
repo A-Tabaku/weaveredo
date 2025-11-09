@@ -10,7 +10,7 @@ Develops character's embodied movement and physicality including:
 
 import json
 from typing import Tuple
-from anthropic import Anthropic
+from anthropic import AsyncAnthropic  # FIX: Use AsyncAnthropic for async functions
 
 from ..schemas import CharacterKnowledgeBase, PhysicalOutput
 
@@ -29,8 +29,8 @@ async def physical_description_agent(
     Returns:
         Tuple of (PhysicalOutput, narrative_description)
     """
-    client = Anthropic(api_key=api_key)
-    model = "claude-sonnet-4-5-20250929"
+    client = AsyncAnthropic(api_key=api_key)  # FIX: Use AsyncAnthropic
+    model = "claude-haiku-4-5-20251001"
 
     # Extract data
     character = kb["input_data"]["characters"][0]
@@ -127,8 +127,8 @@ STRUCTURED:
   ]
 }}"""
 
-    # Make API call
-    response = client.messages.create(
+    # Make API call (FIX: Add await for async client)
+    response = await client.messages.create(
         model=model,
         max_tokens=4000,
         temperature=0.7,

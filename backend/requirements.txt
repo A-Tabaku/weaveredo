@@ -3,8 +3,9 @@
 # Anthropic API
 anthropic>=0.39.0
 
-# Nano Banana (Gemini 2.5 Flash Image) for reference image generation
-google-genai>=0.8.0
+# Google Gemini API for image generation (currently disabled but available)
+google-genai>=1.49.0
+google-generativeai>=0.3.0
 
 # Image processing
 pillow>=10.0.0
@@ -16,9 +17,3 @@ python-dotenv>=1.0.0
 fastapi>=0.104.0
 uvicorn[standard]>=0.24.0
 websockets>=12.0
-
-# Google Gemini API for image generation
-google-generativeai>=0.3.0
-
-# Image processing
-pillow>=10.0.0

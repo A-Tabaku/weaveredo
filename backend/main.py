@@ -50,8 +50,45 @@ async def main():
 
             # Switch to next agent
             current_agent = get_agent_by_level(agent_counter, api_key)
-            conversation_history = []  # Reset conversation for new agent
+            # KEEP conversation history so next agent can see previous agent's output
             print(f"[Switched to Agent: {AgentLevel(agent_counter).name}]")
+
+            # If switching to Character_Identity and we have Entry Agent output, auto-start
+            if AgentLevel(agent_counter) == AgentLevel.Character_Identity:
+                # Check if we have Entry Agent JSON in history
+                has_entry_output = any(
+                    msg["role"] == "assistant" and "FINAL OUTPUT:" in msg["content"]
+                    for msg in conversation_history
+                )
+                if has_entry_output:
+                    print("\n→ Detected character data from Entry Agent")
+                    print("→ Starting character development automatically...\n")
+                    try:
+                        response = await current_agent.run("start", conversation_history)
+                        print(f"\nAgent: {response}")
+                        conversation_history.append({"role": "user", "content": "start"})
+                        conversation_history.append({"role": "assistant", "content": response})
+                    except Exception as e:
+                        print(f"\nError: {str(e)}")
+                        import traceback
+                        traceback.print_exc()
+
+            # If switching to Scene_Creator and we have Character data, show mode options
+            elif AgentLevel(agent_counter) == AgentLevel.Scene_Creator:
+                # Check if we have Character Identity output
+                has_character_output = any(
+                    msg["role"] == "assistant" and "CHARACTER DEVELOPMENT COMPLETE" in msg["content"]
+                    for msg in conversation_history
+                )
+                if has_character_output:
+                    print("\n→ Detected completed character profiles")
+                    print("→ Ready for scene creation!\n")
+                    print("Scene Creator Modes:")
+                    print("  /mode creative_overview - Fast prototyping (2-3 concepts → rapid execution)")
+                    print("  /mode analytical        - Production quality (comprehensive validation)")
+                    print("  /mode deep_dive         - Maximum control (2 options per decision)\n")
+                    print("Or just describe your first scene to start with default mode.\n")
+
             continue
 
         if user_input.lower() == '/reset':
@@ -84,9 +121,7 @@ def get_agent_by_level(level: int, api_key: str):
     if agent_level == AgentLevel.Intro_General_Entry:
         return EntryAgent(api_key=api_key, level=agent_level)
     elif agent_level == AgentLevel.Character_Identity:
-        # TODO: return CharacterIdentityAgent(api_key=api_key, level=agent_level)
-        print("Character_Identity agent not yet implemented, using EntryAgent as fallback")
-        return EntryAgent(api_key=api_key, level=agent_level)
+        print("Initializing Character Development Agent...")
         return CharacterIdentityAgent(api_key=api_key, level=agent_level)
     elif agent_level == AgentLevel.Scene_Creator:
         print("Initializing Scene Creator Agent...")

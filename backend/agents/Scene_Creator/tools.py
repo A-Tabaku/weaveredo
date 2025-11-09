@@ -179,6 +179,26 @@ TOOLS = [
             },
             "required": ["generated_video_data", "scene_json"]
         }
+    },
+    {
+        "name": "get_character_data",
+        "description": "Retrieve character profile data from Character Development system. Use when you need character appearance, personality, or other details for scene planning.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "character_id": {
+                    "type": "string",
+                    "description": "Character ID (UUID) or 'latest' to get most recent character"
+                },
+                "data_type": {
+                    "type": "string",
+                    "description": "Type of data to retrieve: 'full' (complete profile), 'appearance' (visual details), 'personality' (traits/behaviors)",
+                    "enum": ["full", "appearance", "personality"],
+                    "default": "full"
+                }
+            },
+            "required": ["character_id"]
+        }
     }
 ]
 
@@ -241,5 +261,56 @@ async def execute_tool(tool_name: str, **kwargs) -> str:
             character_references=kwargs.get("character_references", None)
         )
 
+    elif tool_name == "get_character_data":
+        return await get_character_data(
+            character_id=kwargs.get("character_id", "latest"),
+            data_type=kwargs.get("data_type", "full")
+        )
+
+
+async def get_character_data(character_id: str, data_type: str = "full") -> str:
+    """Retrieve character data from Character Development system"""
+    import json
+    from pathlib import Path
+
+    character_data_dir = Path(__file__).parent.parent.parent / "character_data"
+
+    if character_id == "latest":
+        if not character_data_dir.exists():
+            return json.dumps({"error": "No characters found"})
+        char_dirs = [d for d in character_data_dir.iterdir() if d.is_dir()]
+        if not char_dirs:
+            return json.dumps({"error": "No characters found"})
+        latest_dir = max(char_dirs, key=lambda d: d.stat().st_mtime)
+        character_id = latest_dir.name
+
+    char_dir = character_data_dir / character_id
+    if not char_dir.exists():
+        return json.dumps({"error": f"Character {character_id} not found"})
+
+    final_profile_path = char_dir / "final_profile.json"
+    if not final_profile_path.exists():
+        return json.dumps({"error": "Character profile not complete"})
+
+    with open(final_profile_path, 'r') as f:
+        profile = json.load(f)
+
+    if data_type == "appearance":
+        return json.dumps({
+            "character_id": character_id,
+            "name": profile["overview"]["name"],
+            "physical_details": profile.get("physical_details", {}),
+            "image_prompts": profile.get("image_prompts", [])
+        }, indent=2)
+    elif data_type == "personality":
+        return json.dumps({
+            "character_id": character_id,
+            "name": profile["overview"]["name"],
+            "personality": profile.get("personality", {}),
+            "voice_patterns": profile.get("voice_patterns", {})
+        }, indent=2)
     else:
-        return f"Error: Unknown tool '{tool_name}'"
+        return json.dumps({
+            "character_id": character_id,
+            "profile": profile
+        }, indent=2)

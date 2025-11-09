@@ -76,7 +76,7 @@ class CharacterStorage:
             "current_wave": 1,
             "current_checkpoint": 0,
             "completed_checkpoints": 0,
-            "total_checkpoints": 8,
+            "total_checkpoints": 7,  # FIX: Changed from 8 (image generation disabled)
             "regenerations": 0
         }
 

@@ -103,7 +103,23 @@ class CharacterOrchestrator:
             "message": f"{agent_name} analysis complete. Awaiting approval."
         })
 
+        # WAIT for checkpoint approval before continuing
+        await self._wait_for_checkpoint_approval(checkpoint_number)
+
         return checkpoint
+
+    async def _wait_for_checkpoint_approval(self, checkpoint_number: int):
+        """Wait for checkpoint to be approved before continuing"""
+        import asyncio
+
+        while True:
+            metadata = self.storage.load_metadata(self.character_id)
+            if metadata.get("completed_checkpoints", 0) >= checkpoint_number:
+                # Checkpoint approved!
+                break
+
+            # Check every 0.5 seconds
+            await asyncio.sleep(0.5)
 
     async def run_wave_1(self):
         """Execute Wave 1: Foundation (Personality + Backstory)"""
@@ -253,44 +269,41 @@ class CharacterOrchestrator:
         })
 
     async def run_wave_3(self):
-        """Execute Wave 3: Social (Relationships + Image Generation)"""
+        """Execute Wave 3: Social (Relationships only - Image Generation commented out)"""
 
         await self._send_update({
             "type": "wave_started",
             "wave": 3,
-            "agents": ["relationships", "image_generation"]
+            "agents": ["relationships"]  # FIX: Removed image_generation
         })
 
         # Update KB
         self.kb["current_wave"] = 3
         self.storage.save_character_kb(self.kb)
 
-        # Run both agents in parallel
+        # Run relationships agent only (image generation commented out)
         start_time = datetime.now()
 
         relationships_task = relationships_agent(self.kb, self.anthropic_api_key)
-        image_task = image_generation_agent(self.kb, self.gemini_api_key, self.storage)
+        # COMMENTED OUT: image_task = image_generation_agent(self.kb, self.gemini_api_key, self.storage)
 
-        relationships_result, image_result = await asyncio.gather(
-            relationships_task,
-            image_task
-        )
+        relationships_result = await relationships_task  # FIX: No longer using gather
 
         end_time = datetime.now()
         wave_time = (end_time - start_time).total_seconds()
 
         # Unpack results
         relationships_output, relationships_narrative = relationships_result
-        image_output, image_narrative = image_result
+        # COMMENTED OUT: image_output, image_narrative = image_result
 
         # Update KB
         self.kb["relationships"] = relationships_output
-        self.kb["image_generation"] = image_output
+        # COMMENTED OUT: self.kb["image_generation"] = image_output
         self.kb["agent_statuses"]["relationships"] = {"status": "completed", "wave": 3}
-        self.kb["agent_statuses"]["image_generation"] = {"status": "completed", "wave": 3}
+        # COMMENTED OUT: self.kb["agent_statuses"]["image_generation"] = {"status": "completed", "wave": 3}
         self.storage.save_character_kb(self.kb)
 
-        # Create checkpoints
+        # Create checkpoint for relationships only
         await self._create_checkpoint(
             checkpoint_number=6,
             agent_name="relationships",
@@ -298,23 +311,24 @@ class CharacterOrchestrator:
             output=relationships_output,
             narrative=relationships_narrative,
             tokens_used=1800,
-            agent_time=wave_time / 2
+            agent_time=wave_time
         )
 
-        await self._create_checkpoint(
-            checkpoint_number=7,
-            agent_name="image_generation",
-            wave=3,
-            output=image_output,
-            narrative=image_narrative,
-            tokens_used=5160,  # 4 images * 1290 tokens
-            agent_time=wave_time / 2
-        )
+        # COMMENTED OUT: Image generation checkpoint
+        # await self._create_checkpoint(
+        #     checkpoint_number=7,
+        #     agent_name="image_generation",
+        #     wave=3,
+        #     output=image_output,
+        #     narrative=image_narrative,
+        #     tokens_used=5160,
+        #     agent_time=wave_time / 2
+        # )
 
         await self._send_update({
             "type": "wave_complete",
             "wave": 3,
-            "agents_completed": ["relationships", "image_generation"],
+            "agents_completed": ["relationships"],  # FIX: Removed image_generation
             "next_wave": "final"
         })
 
@@ -332,19 +346,26 @@ class CharacterOrchestrator:
             "one_line": f"{character['name']} - {character['role']}"
         }
 
-        # Create visual data
-        image_urls = []
-        if self.kb.get("image_generation"):
-            for img in self.kb["image_generation"]["images"]:
-                image_urls.append({
-                    "type": img["type"],
-                    "url": img["path"]
-                })
+        # Create visual data (COMMENTED OUT: Image generation disabled)
+        # image_urls = []
+        # if self.kb.get("image_generation"):
+        #     for img in self.kb["image_generation"]["images"]:
+        #         image_urls.append({
+        #             "type": img["type"],
+        #             "url": img["path"]
+        #         })
 
         visual_data = {
-            "images": image_urls,
-            "style_notes": self.kb["image_generation"]["style_profile"] if self.kb.get("image_generation") else ""
+            "images": [],  # FIX: Empty since image generation is disabled
+            "style_notes": ""  # FIX: No style notes without image generation
         }
+
+        # Validate required fields before creating final profile
+        required_fields = ["personality", "backstory_motivation", "voice_dialogue",
+                          "physical_description", "story_arc", "relationships"]
+        for field in required_fields:
+            if not self.kb.get(field):
+                raise ValueError(f"Cannot create final profile: {field} data missing. Character development incomplete.")
 
         # Create final profile
         final_profile: FinalCharacterProfile = {
@@ -359,13 +380,13 @@ class CharacterOrchestrator:
             "voice": self.kb["voice_dialogue"],  # type: ignore
             "backstory_motivation": self.kb["backstory_motivation"],  # type: ignore
             "narrative_arc": self.kb["story_arc"],  # type: ignore
-            "relationships": self.kb["relationships"]["relationships"] if self.kb.get("relationships") else [],
+            "relationships": self.kb["relationships"].get("relationships", []) if self.kb.get("relationships") else [],  # FIX: Handle both nested and flat structure
             "metadata": {
                 "mode": self.kb["mode"],
                 "development_time_minutes": 0,  # Calculate if needed
-                "total_checkpoints": 8,
+                "total_checkpoints": 7,  # FIX: Changed from 8 (no image generation)
                 "regenerations": metadata.get("regenerations", 0),
-                "total_tokens": 12000  # Sum of all agents
+                "total_tokens": 10000  # FIX: Reduced from 12000 (no image gen)
             }
         }
 
@@ -374,7 +395,7 @@ class CharacterOrchestrator:
 
         # Create final checkpoint
         await self._create_checkpoint(
-            checkpoint_number=8,
+            checkpoint_number=7,  # FIX: Changed from 8 (now final checkpoint)
             agent_name="final_consolidation",
             wave=4,
             output=final_profile,  # type: ignore

@@ -137,15 +137,30 @@ async def start_character(request: StartCharacterRequest, background_tasks: Back
             mode=request.mode
         )
 
-        # Run development in background
+        # Run development in background with error handling
         async def run_development():
-            async def websocket_callback(message: dict):
-                await manager.send_message(character_id, message)
+            try:
+                async def websocket_callback(message: dict):
+                    await manager.send_message(character_id, message)
 
-            await character_agent.run_character_development(
-                character_id,
-                websocket_callback=websocket_callback
-            )
+                await character_agent.run_character_development(
+                    character_id,
+                    websocket_callback=websocket_callback
+                )
+            except Exception as e:
+                # Send error message via WebSocket
+                await manager.send_message(character_id, {
+                    "type": "error",
+                    "message": f"Character development failed: {str(e)}"
+                })
+                # Update character metadata to failed status
+                try:
+                    metadata = character_agent.storage.load_metadata(character_id)
+                    metadata["status"] = "failed"
+                    metadata["error"] = str(e)
+                    character_agent.storage.save_metadata(character_id, metadata)
+                except:
+                    pass
 
         background_tasks.add_task(run_development)
 
@@ -153,7 +168,7 @@ async def start_character(request: StartCharacterRequest, background_tasks: Back
             "character_id": character_id,
             "status": "wave_1_started",
             "message": "Character development initiated",
-            "checkpoint_count": 8
+            "checkpoint_count": 7  # FIX: Changed from 8 (image generation disabled)
         }
 
     except Exception as e:
@@ -262,12 +277,246 @@ async def websocket_endpoint(websocket: WebSocket, character_id: str):
 
 
 # ============================================================================
+# ENTRY AGENT ENDPOINTS
+# ============================================================================
+
+from agents.Intro_General_Entry.agent import EntryAgent
+import uuid
+
+# Store active entry sessions
+entry_sessions: Dict[str, Dict] = {}
+
+class EntryStartRequest(BaseModel):
+    session_id: Optional[str] = None
+
+class EntryChatRequest(BaseModel):
+    message: str
+
+@app.post("/api/entry/start")
+async def start_entry_session(request: EntryStartRequest):
+    """Start a new Entry Agent conversation session"""
+    session_id = request.session_id or str(uuid.uuid4())
+
+    entry_sessions[session_id] = {
+        "agent": EntryAgent(api_key=anthropic_api_key, level=AgentLevel.Intro_General_Entry),
+        "conversation_history": [],
+        "status": "active",
+        "output": None
+    }
+
+    return {
+        "session_id": session_id,
+        "status": "active",
+        "message": "Entry Agent session started. Ask me about your video concept!"
+    }
+
+@app.post("/api/entry/{session_id}/chat")
+async def entry_chat(session_id: str, request: EntryChatRequest):
+    """Send message to Entry Agent"""
+    if session_id not in entry_sessions:
+        raise HTTPException(status_code=404, detail="Session not found")
+
+    session = entry_sessions[session_id]
+
+    try:
+        # Run Entry Agent
+        response = await session["agent"].run(
+            request.message,
+            session["conversation_history"]
+        )
+
+        # Update history
+        session["conversation_history"].append({"role": "user", "content": request.message})
+        session["conversation_history"].append({"role": "assistant", "content": response})
+
+        # Check if Entry Agent finalized output
+        is_final = "FINAL OUTPUT:" in response
+        if is_final and hasattr(session["agent"], "last_output"):
+            session["output"] = session["agent"].last_output
+            session["status"] = "completed"
+
+        return {
+            "response": response,
+            "is_final": is_final,
+            "output": session["output"] if is_final else None,
+            "status": session["status"]
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/entry/{session_id}/status")
+async def get_entry_status(session_id: str):
+    """Get Entry Agent session status"""
+    if session_id not in entry_sessions:
+        raise HTTPException(status_code=404, detail="Session not found")
+
+    session = entry_sessions[session_id]
+    return {
+        "session_id": session_id,
+        "status": session["status"],
+        "message_count": len(session["conversation_history"]),
+        "output": session["output"]
+    }
+
+
+# ============================================================================
+# SCENE CREATOR ENDPOINTS
+# ============================================================================
+
+from agents.Scene_Creator.agent import SceneCreatorAgent
+
+# Store active scene sessions
+scene_sessions: Dict[str, Dict] = {}
+
+class SceneStartRequest(BaseModel):
+    project_id: Optional[str] = "default"
+    mode: Optional[str] = "creative_overview"
+
+class SceneChatRequest(BaseModel):
+    message: str
+
+class SceneModeRequest(BaseModel):
+    mode: str
+
+@app.post("/api/scene/start")
+async def start_scene_session(request: SceneStartRequest):
+    """Start a new Scene Creator session"""
+    project_id = request.project_id
+
+    scene_sessions[project_id] = {
+        "agent": SceneCreatorAgent(
+            api_key=anthropic_api_key,
+            level=AgentLevel.Scene_Creator,
+            project_id=project_id
+        ),
+        "conversation_history": [],
+        "status": "active",
+        "scenes": [],
+        "current_mode": request.mode
+    }
+
+    # Set initial mode
+    scene_sessions[project_id]["agent"].switch_mode(request.mode)
+
+    return {
+        "project_id": project_id,
+        "status": "active",
+        "mode": request.mode,
+        "message": f"Scene Creator started in {request.mode} mode. Describe your first scene!"
+    }
+
+@app.post("/api/scene/{project_id}/chat")
+async def scene_chat(project_id: str, request: SceneChatRequest):
+    """Send message to Scene Creator"""
+    if project_id not in scene_sessions:
+        raise HTTPException(status_code=404, detail="Scene session not found")
+
+    session = scene_sessions[project_id]
+
+    try:
+        # Run Scene Creator
+        response = await session["agent"].run(
+            request.message,
+            session["conversation_history"]
+        )
+
+        # Update history
+        session["conversation_history"].append({"role": "user", "content": request.message})
+        session["conversation_history"].append({"role": "assistant", "content": response})
+
+        return {
+            "response": response,
+            "mode": session["current_mode"],
+            "scene_count": len(session["scenes"])
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/scene/{project_id}/mode")
+async def switch_scene_mode(project_id: str, request: SceneModeRequest):
+    """Switch Scene Creator mode"""
+    if project_id not in scene_sessions:
+        raise HTTPException(status_code=404, detail="Scene session not found")
+
+    session = scene_sessions[project_id]
+    success = session["agent"].switch_mode(request.mode)
+
+    if success:
+        session["current_mode"] = request.mode
+        return {
+            "success": True,
+            "mode": request.mode,
+            "message": f"Mode switched to {request.mode}"
+        }
+    else:
+        raise HTTPException(status_code=400, detail="Invalid mode")
+
+@app.get("/api/scene/{project_id}/status")
+async def get_scene_status(project_id: str):
+    """Get Scene Creator session status"""
+    if project_id not in scene_sessions:
+        raise HTTPException(status_code=404, detail="Scene session not found")
+
+    session = scene_sessions[project_id]
+    return {
+        "project_id": project_id,
+        "status": session["status"],
+        "mode": session["current_mode"],
+        "message_count": len(session["conversation_history"]),
+        "scene_count": len(session["scenes"])
+    }
+
+
+# ============================================================================
+# PROJECT MANAGEMENT ENDPOINTS
+# ============================================================================
+
+from utils.state_manager import read_project_state
+
+projects_store: Dict[str, Dict] = {}
+
+class CreateProjectRequest(BaseModel):
+    name: str
+    description: Optional[str] = ""
+
+@app.post("/api/projects")
+async def create_project(request: CreateProjectRequest):
+    """Create a new project"""
+    project_id = str(uuid.uuid4())
+
+    projects_store[project_id] = {
+        "id": project_id,
+        "name": request.name,
+        "description": request.description,
+        "created_at": str(asyncio.get_event_loop().time()),
+        "entry_session": None,
+        "character_ids": [],
+        "scene_project_id": None,
+        "status": "active"
+    }
+
+    return projects_store[project_id]
+
+@app.get("/api/projects")
+async def list_projects():
+    """List all projects"""
+    return {"projects": list(projects_store.values())}
+
+@app.get("/api/projects/{project_id}")
+async def get_project(project_id: str):
+    """Get project details"""
+    if project_id not in projects_store:
+        raise HTTPException(status_code=404, detail="Project not found")
+    return projects_store[project_id]
+
+
+# ============================================================================
 # HEALTH CHECK
 # ============================================================================
 
 @app.get("/health")
 async def health_check():
-    return {"status": "healthy", "service": "character-development-api"}
+    return {"status": "healthy", "service": "weave-multi-agent-api"}
 
 
 if __name__ == "__main__":

@@ -10,7 +10,7 @@ Develops character's narrative function and transformation including:
 
 import json
 from typing import Tuple
-from anthropic import Anthropic
+from anthropic import AsyncAnthropic  # FIX: Use AsyncAnthropic for async functions
 
 from ..schemas import CharacterKnowledgeBase, StoryArcOutput, TransformationBeat
 
@@ -29,8 +29,8 @@ async def story_arc_agent(
     Returns:
         Tuple of (StoryArcOutput, narrative_description)
     """
-    client = Anthropic(api_key=api_key)
-    model = "claude-sonnet-4-5-20250929"
+    client = AsyncAnthropic(api_key=api_key)  # FIX: Use AsyncAnthropic
+    model = "claude-haiku-4-5-20251001"
 
     # Extract data
     character = kb["input_data"]["characters"][0]
@@ -49,10 +49,17 @@ async def story_arc_agent(
 
     if kb.get("backstory_motivation"):
         b = kb["backstory_motivation"]
+        # Handle internal_conflicts safely - can be list of strings or dicts
+        conflicts = b.get("internal_conflicts", [])
+        if conflicts and isinstance(conflicts[0], dict):
+            conflict_str = ", ".join([str(c) for c in conflicts])
+        else:
+            conflict_str = ", ".join(conflicts) if conflicts else "None specified"
+
         context_blocks.append(f"""MOTIVATION:
 - Surface Goal: {b["goals"].get("surface", "Unknown")}
 - Deep Need: {b["goals"].get("deep", "Unknown")}
-- Internal Conflicts: {", ".join(b["internal_conflicts"])}""")
+- Internal Conflicts: {conflict_str}""")
 
     full_context = "\n\n".join(context_blocks)
 
@@ -119,8 +126,8 @@ STRUCTURED:
   "scene_presence": ["Scene 1", "Scene 2", ...]
 }}"""
 
-    # Make API call
-    response = client.messages.create(
+    # Make API call (FIX: Add await for async client)
+    response = await client.messages.create(
         model=model,
         max_tokens=4000,
         temperature=0.7,

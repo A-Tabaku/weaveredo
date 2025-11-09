@@ -5,7 +5,7 @@ Single LLM system that asks questions and outputs structured JSON when ready.
 
 from typing import List, Dict, Any
 import json
-from anthropic import Anthropic
+from anthropic import AsyncAnthropic  # FIX: Use AsyncAnthropic for async functions
 from agent_types import AgentLevel
 
 
@@ -15,8 +15,8 @@ class EntryAgent:
     def __init__(self, api_key: str, level: AgentLevel):
         self.api_key = api_key
         self.level = level
-        self.client = Anthropic(api_key=api_key)
-        self.model = "claude-sonnet-4-5-20250929"
+        self.client = AsyncAnthropic(api_key=api_key)  # FIX: Use AsyncAnthropic for async functions
+        self.model = "claude-haiku-4-5-20251001"  # Using Haiku for speed + cost efficiency
 
     async def run(self, user_input: str, conversation_history: List[Dict[str, str]]) -> str:
         """
@@ -51,8 +51,13 @@ Ask clarifying questions to collect:
 2. STORYLINE:
    - Overall concept/theme
    - Beginning, middle, end (basic story arc)
-   - Key scenes or moments
-   - Tone/style (dramatic, comedic, realistic, etc.)
+   - KEY SCENES (with detailed descriptions):
+     * Scene title/label
+     * What happens visually in this scene (detailed description for video generation)
+     * Which characters appear
+     * Setting/location
+     * Mood/emotional tone of the scene
+   - Overall tone/style (dramatic, comedic, realistic, etc.)
 
 QUESTION ASKING STRATEGY:
 - Start by understanding the basic concept
@@ -64,8 +69,15 @@ QUESTION ASKING STRATEGY:
 COMPLETION CRITERIA:
 Only finalize when you have:
 - At least ONE main character with visual description and role
-- Clear storyline with beginning/middle/end or key scenes
-- Tone/style preference
+- Clear storyline with beginning/middle/end
+- AT LEAST 3 key scenes with detailed descriptions (title, visual description, characters, setting, mood)
+- Overall tone/style preference
+
+When gathering scene information, ask about:
+- What happens visually in each scene
+- Which characters are present
+- Where the scene takes place (setting)
+- The emotional mood of the scene
 
 When you're confident you have sufficient information, use the finalize_output tool to generate the structured JSON.
 
@@ -100,12 +112,26 @@ DO NOT output JSON directly in your responses - only use the finalize_output too
                                 "overview": {"type": "string", "description": "Brief summary of the story"},
                                 "scenes": {
                                     "type": "array",
-                                    "description": "List of key scenes or story beats",
-                                    "items": {"type": "string"}
+                                    "description": "List of key scenes with detailed descriptions for video generation",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "title": {"type": "string", "description": "Scene title or label"},
+                                            "description": {"type": "string", "description": "Detailed visual description of what happens in this scene"},
+                                            "characters_involved": {
+                                                "type": "array",
+                                                "description": "Which characters appear in this scene",
+                                                "items": {"type": "string"}
+                                            },
+                                            "setting": {"type": "string", "description": "Location and environment for this scene"},
+                                            "mood": {"type": "string", "description": "Emotional tone of this specific scene"}
+                                        },
+                                        "required": ["title", "description", "characters_involved", "setting"]
+                                    }
                                 },
                                 "tone": {"type": "string", "description": "Overall tone/style"}
                             },
-                            "required": ["overview", "tone"]
+                            "required": ["overview", "scenes", "tone"]
                         }
                     },
                     "required": ["characters", "storyline"]
@@ -113,8 +139,8 @@ DO NOT output JSON directly in your responses - only use the finalize_output too
             }
         ]
 
-        # Initial API call
-        response = self.client.messages.create(
+        # Initial API call (FIX: Add await for async client)
+        response = await self.client.messages.create(
             model=self.model,
             max_tokens=4096,
             system=system_prompt,
@@ -134,7 +160,24 @@ DO NOT output JSON directly in your responses - only use the finalize_output too
                     # Format the JSON output nicely
                     output_data = tool_use.input
                     formatted_json = json.dumps(output_data, indent=2)
-                    return f"FINAL OUTPUT:\n\n{formatted_json}\n\nInformation gathering complete!"
+
+                    # Store for next agent
+                    self.last_output = output_data
+
+                    return f"""FINAL OUTPUT:
+
+{formatted_json}
+
+✓ Video concept captured!
+✓ {len(output_data.get('characters', []))} character(s) outlined
+✓ {len(output_data.get('storyline', {}).get('scenes', []))} scene(s) with detailed descriptions
+
+→ Ready for deep character development!
+→ Type '/next' to expand characters with the Character Development system
+   (6 AI agents will create: psychology, backstory, voice, physical details, story arc, relationships)
+
+→ After that, type '/next' again to reach Scene Creator for final scene refinement
+"""
 
                     tool_results.append({
                         "type": "tool_result",
@@ -152,8 +195,8 @@ DO NOT output JSON directly in your responses - only use the finalize_output too
             messages.append({"role": "assistant", "content": response.content})
             messages.append({"role": "user", "content": tool_results})
 
-            # Get next response
-            response = self.client.messages.create(
+            # Get next response (FIX: Add await for async client)
+            response = await self.client.messages.create(
                 model=self.model,
                 max_tokens=4096,
                 system=system_prompt,

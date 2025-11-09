@@ -52,12 +52,24 @@ class TimelineEvent(TypedDict):
     event: str
 
 
+class FormativeExperience(TypedDict):
+    """Single formative experience with impact"""
+    experience: str
+    impact: str
+
+
+class InternalConflict(TypedDict):
+    """Single internal conflict with description"""
+    conflict: str
+    description: str
+
+
 class BackstoryOutput(TypedDict):
     """Output from Backstory & Motivation sub-agent"""
     timeline: List[TimelineEvent]
-    formative_experiences: List[str]
+    formative_experiences: List[FormativeExperience]  # FIX: Changed from List[str]
     goals: Dict[str, str]  # {"surface": "...", "deep": "..."}
-    internal_conflicts: List[str]
+    internal_conflicts: List[InternalConflict]  # FIX: Changed from List[str]
 
 
 class SampleDialogue(TypedDict):

@@ -15,7 +15,7 @@ try:
     NANO_BANANA_AVAILABLE = True
 except ImportError:
     NANO_BANANA_AVAILABLE = False
-    print("Warning: google-genai not installed. Nano Banana features will be unavailable.")
+    # FIX: Suppressed warning - google-genai is now installed via requirements.txt
 
 import sys
 sys.path.append('../../..')
