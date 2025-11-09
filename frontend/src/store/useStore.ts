@@ -1,15 +1,19 @@
 import { create } from 'zustand';
-import type { TreeNode, ChatMessage, Conversation, Tab, Agent } from '../types';
+import type { TreeNode, ChatMessage, Conversation, Tab, Agent, AgentLevel, WeaveState } from '../types';
+import type { EntryAgentOutput, Checkpoint } from '../services/weaveApi';
 
 interface WeaveStore {
   // Tree state
   nodes: TreeNode[];
   selectedNodeId: string | null;
   setSelectedNode: (id: string | null) => void;
+  updateNode: (id: string, updates: Partial<TreeNode>) => void;
+  addNode: (node: TreeNode) => void;
 
   // Chat state
   messages: ChatMessage[];
   addMessage: (message: Omit<ChatMessage, 'id' | 'timestamp'>) => void;
+  clearMessages: () => void;
 
   // UI state
   activeTab: Tab;
@@ -23,6 +27,18 @@ interface WeaveStore {
   // Layout state
   leftPanelWidth: number;
   setLeftPanelWidth: (width: number) => void;
+
+  // Weave Backend Integration
+  weave: WeaveState;
+  setCurrentAgentLevel: (level: AgentLevel) => void;
+  setEntrySessionId: (id: string) => void;
+  setEntryOutput: (output: EntryAgentOutput) => void;
+  setCharacterId: (id: string) => void;
+  addCharacterCheckpoint: (checkpoint: Checkpoint) => void;
+  setSceneProjectId: (id: string) => void;
+  setProcessing: (isProcessing: boolean) => void;
+  setError: (error: string | null) => void;
+  initializeAgentTree: () => void;
 }
 
 // Mock data for initial state - Simplified high-level workflow
