@@ -6,7 +6,7 @@
   body {
     @apply bg-bg-primary text-text-primary font-sans;
     margin: 0;
-    overflow: hidden;
+    overflow-x: hidden;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
@@ -17,7 +17,7 @@
 
   #root {
     width: 100vw;
-    height: 100vh;
+    min-height: 100vh;
   }
 }
 
