@@ -26,15 +26,28 @@ export function ChatInput() {
       content: message,
     });
 
-    // Simulate a brief delay for realism
+    // Add typing indicator
+    const typingMessageId = Math.random().toString(36).substr(2, 9);
+    addMessage({
+      type: 'typing',
+      content: '',
+      id: typingMessageId,
+    });
+
+    // 4-second delay with typing animation
     setTimeout(() => {
+      // Remove typing indicator (by replacing messages without it)
+      const { messages, addMessage: add } = useStore.getState();
+      const filteredMessages = messages.filter(msg => msg.id !== typingMessageId);
+      useStore.setState({ messages: filteredMessages });
+
       // Add automatic 429 error response
       addMessage({
         type: 'agent',
         content: ANTHROPIC_429_ERROR,
       });
       setIsProcessing(false);
-    }, 800);
+    }, 4000);
   };
 
   return (
