@@ -5,7 +5,7 @@ export function LandingPage() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-bg-primary via-[#1A1A1D] to-[#0F0F11] text-text-primary overflow-x-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-bg-primary via-[#1A1A1D] to-[#0F0F11] text-text-primary overflow-x-hidden relative">
       {/* Animated background grid */}
       <div className="fixed inset-0 opacity-20 pointer-events-none">
         <div className="absolute inset-0" style={{
@@ -13,6 +13,44 @@ export function LandingPage() {
           backgroundSize: '50px 50px',
         }} />
       </div>
+
+      {/* Glowing diagonal lines background */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        {/* Diagonal lines with glow */}
+        {[...Array(12)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute h-[200vh] w-1 opacity-30"
+            style={{
+              left: `${i * 10}%`,
+              top: '-50%',
+              transform: 'rotate(25deg)',
+              background: `linear-gradient(180deg, 
+                transparent 0%, 
+                rgba(139, 92, 246, ${0.3 + (i % 3) * 0.2}) 30%,
+                rgba(139, 92, 246, ${0.5 + (i % 3) * 0.2}) 50%,
+                rgba(139, 92, 246, ${0.3 + (i % 3) * 0.2}) 70%,
+                transparent 100%
+              )`,
+              boxShadow: `0 0 20px rgba(139, 92, 246, ${0.4 + (i % 3) * 0.2}), 
+                          0 0 40px rgba(139, 92, 246, ${0.2 + (i % 3) * 0.1})`,
+              animation: `pulse ${8 + (i % 3) * 2}s ease-in-out infinite`,
+              animationDelay: `${i * 0.5}s`,
+            }}
+          />
+        ))}
+      </div>
+
+      <style>{`
+        @keyframes pulse {
+          0%, 100% {
+            opacity: 0.3;
+          }
+          50% {
+            opacity: 0.6;
+          }
+        }
+      `}</style>
 
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center justify-center px-6 py-20">
