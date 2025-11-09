@@ -684,45 +684,13 @@ class SceneModeRequest(BaseModel):
 
 @app.post("/api/scene/start")
 async def start_scene_session(request: SceneStartRequest):
-    """Start a new Scene Creator session (or resume from disk)"""
-    project_id = request.project_id
-
-    # Try to load existing session from disk
-    if project_id:
-        loaded_session = load_scene_session(project_id, anthropic_api_key)
-        if loaded_session:
-            scene_sessions[project_id] = loaded_session
-            return {
-                "project_id": project_id,
-                "status": loaded_session["status"],
-                "mode": loaded_session["current_mode"],
-                "message": "Scene Creator session resumed from disk!"
-            }
-
-    # Create new session
-    scene_sessions[project_id] = {
-        "agent": SceneCreatorAgent(
-            api_key=anthropic_api_key,
-            level=AgentLevel.Scene_Creator,
-            project_id=project_id
-        ),
-        "conversation_history": [],
-        "status": "active",
-        "scenes": [],
-        "current_mode": request.mode
-    }
-
-    # Set initial mode
-    scene_sessions[project_id]["agent"].switch_mode(request.mode)
-
-    # Save new session to disk
-    save_scene_session(project_id, scene_sessions[project_id])
-
+    """Start a new Scene Creator session - TEMPORARILY DISABLED"""
+    # TODO: Scene Creator needs utils module
     return {
-        "project_id": project_id,
-        "status": "active",
+        "project_id": request.project_id,
+        "status": "disabled",
         "mode": request.mode,
-        "message": f"Scene Creator started in {request.mode} mode. Describe your first scene!"
+        "message": "Scene Creator is temporarily disabled. Coming soon!"
     }
 
 @app.post("/api/scene/{project_id}/chat")
