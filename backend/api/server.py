@@ -695,38 +695,12 @@ async def start_scene_session(request: SceneStartRequest):
 
 @app.post("/api/scene/{project_id}/chat")
 async def scene_chat(project_id: str, request: SceneChatRequest):
-    """Send message to Scene Creator"""
-    # Try to load session from disk if not in memory
-    if project_id not in scene_sessions:
-        loaded_session = load_scene_session(project_id, anthropic_api_key)
-        if loaded_session:
-            scene_sessions[project_id] = loaded_session
-        else:
-            raise HTTPException(status_code=404, detail="Scene session not found")
-
-    session = scene_sessions[project_id]
-
-    try:
-        # Run Scene Creator
-        response = await session["agent"].run(
-            request.message,
-            session["conversation_history"]
-        )
-
-        # Update history
-        session["conversation_history"].append({"role": "user", "content": request.message})
-        session["conversation_history"].append({"role": "assistant", "content": response})
-
-        # Save session to disk after each message
-        save_scene_session(project_id, session)
-
-        return {
-            "response": response,
-            "mode": session["current_mode"],
-            "scene_count": len(session["scenes"])
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    """Send message to Scene Creator - TEMPORARILY DISABLED"""
+    return {
+        "response": "Scene Creator is temporarily disabled. Coming soon!",
+        "mode": "disabled",
+        "scene_count": 0
+    }
 
 @app.post("/api/scene/{project_id}/mode")
 async def switch_scene_mode(project_id: str, request: SceneModeRequest):
