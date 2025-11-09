@@ -727,7 +727,8 @@ async def get_scene_status(project_id: str):
 # PROJECT MANAGEMENT ENDPOINTS
 # ============================================================================
 
-from utils.state_manager import read_project_state
+# TODO: utils module missing - temporarily disabled
+# from utils.state_manager import read_project_state
 
 projects_store: Dict[str, Dict] = {}
 
