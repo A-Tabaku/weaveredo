@@ -21,7 +21,7 @@ export interface TreeNode {
 
 export interface ChatMessage {
   id: string;
-  type: 'user' | 'agent' | 'thinking' | 'action' | 'code';
+  type: 'user' | 'agent' | 'thinking' | 'action' | 'code' | 'typing';
   content: string;
   timestamp: Date;
   nodeContext?: string;
