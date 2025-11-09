@@ -59,11 +59,23 @@ export function ChatMessages() {
 
         // Agent messages
         return (
-          <div key={message.id} className="space-y-1">
-            <div className="text-[11px] text-text-tertiary uppercase tracking-wider font-medium">
-              AGENT
+          <div key={message.id} className="space-y-2">
+            <div className="flex items-center gap-2">
+              {/* Gradient emoji icon */}
+              <div 
+                className="w-6 h-6 rounded-full flex items-center justify-center text-sm"
+                style={{
+                  background: 'linear-gradient(135deg, #8B5CF6 0%, #60A5FA 100%)',
+                  boxShadow: '0 0 10px rgba(139, 92, 246, 0.3)',
+                }}
+              >
+                🤖
+              </div>
+              <div className="text-[11px] text-text-tertiary uppercase tracking-wider font-medium">
+                AGENT
+              </div>
             </div>
-            <div className="text-sm text-text-primary leading-relaxed">
+            <div className="text-sm text-text-primary leading-relaxed whitespace-pre-wrap">
               {message.content}
             </div>
           </div>
