@@ -284,6 +284,10 @@ export const useStore = create<WeaveStore>((set) => ({
         },
       ],
     })),
+  removeMessage: (id) =>
+    set((state) => ({
+      messages: state.messages.filter((msg) => msg.id !== id),
+    })),
   clearMessages: () => set({ messages: [] }),
 
   // UI state
