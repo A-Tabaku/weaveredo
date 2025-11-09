@@ -704,22 +704,12 @@ async def scene_chat(project_id: str, request: SceneChatRequest):
 
 @app.post("/api/scene/{project_id}/mode")
 async def switch_scene_mode(project_id: str, request: SceneModeRequest):
-    """Switch Scene Creator mode"""
-    if project_id not in scene_sessions:
-        raise HTTPException(status_code=404, detail="Scene session not found")
-
-    session = scene_sessions[project_id]
-    success = session["agent"].switch_mode(request.mode)
-
-    if success:
-        session["current_mode"] = request.mode
-        return {
-            "success": True,
-            "mode": request.mode,
-            "message": f"Mode switched to {request.mode}"
-        }
-    else:
-        raise HTTPException(status_code=400, detail="Invalid mode")
+    """Switch Scene Creator mode - TEMPORARILY DISABLED"""
+    return {
+        "success": False,
+        "mode": "disabled",
+        "message": "Scene Creator is temporarily disabled. Coming soon!"
+    }
 
 @app.get("/api/scene/{project_id}/status")
 async def get_scene_status(project_id: str):
