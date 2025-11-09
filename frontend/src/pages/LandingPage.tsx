@@ -5,9 +5,9 @@ export function LandingPage() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-bg-primary via-[#1A1A1D] to-[#0F0F11] text-text-primary overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-bg-primary via-[#1A1A1D] to-[#0F0F11] text-text-primary overflow-x-hidden">
       {/* Animated background grid */}
-      <div className="fixed inset-0 opacity-20">
+      <div className="fixed inset-0 opacity-20 pointer-events-none">
         <div className="absolute inset-0" style={{
           backgroundImage: 'linear-gradient(rgba(139, 92, 246, 0.15) 1.5px, transparent 1.5px), linear-gradient(90deg, rgba(139, 92, 246, 0.15) 1.5px, transparent 1.5px)',
           backgroundSize: '50px 50px',
