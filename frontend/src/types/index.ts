@@ -38,6 +38,20 @@ export interface Conversation {
 export type Tab = 'tree' | 'timeline';
 export type Agent = 'Sub-1' | 'Sub-2' | 'Sub-3';
 
+// Weave-specific types
+export type AgentLevel = 1 | 2 | 3; // 1=Entry, 2=Character Identity, 3=Scene Creator
+
+export interface WeaveState {
+  currentAgentLevel: AgentLevel;
+  entrySessionId: string | null;
+  entryOutput: any | null; // EntryAgentOutput from weaveApi
+  characterId: string | null;
+  characterCheckpoints: any[]; // Checkpoint[] from weaveApi
+  sceneProjectId: string | null;
+  isProcessing: boolean;
+  error: string | null;
+}
+
 // For ReactFlow
 export interface FlowNode {
   id: string;
