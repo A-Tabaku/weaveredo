@@ -258,22 +258,32 @@ const mockConversations: Conversation[] = [
 
 export const useStore = create<WeaveStore>((set) => ({
   // Tree state
-  nodes: mockNodes,
-  selectedNodeId: 'scene2',
+  nodes: [],
+  selectedNodeId: null,
   setSelectedNode: (id) => set({ selectedNodeId: id }),
+  updateNode: (id, updates) =>
+    set((state) => ({
+      nodes: state.nodes.map((node) => (node.id === id ? { ...node, ...updates } : node)),
+    })),
+  addNode: (node) =>
+    set((state) => ({
+      nodes: [...state.nodes, node],
+    })),
 
   // Chat state
-  messages: mockMessages,
-  addMessage: (message) => set((state) => ({
-    messages: [
-      ...state.messages,
-      {
-        ...message,
-        id: Math.random().toString(36).substr(2, 9),
-        timestamp: new Date(),
-      },
-    ],
-  })),
+  messages: [],
+  addMessage: (message) =>
+    set((state) => ({
+      messages: [
+        ...state.messages,
+        {
+          ...message,
+          id: Math.random().toString(36).substr(2, 9),
+          timestamp: new Date(),
+        },
+      ],
+    })),
+  clearMessages: () => set({ messages: [] }),
 
   // UI state
   activeTab: 'tree',
@@ -283,8 +293,99 @@ export const useStore = create<WeaveStore>((set) => ({
   setActiveAgent: (agent) => set({ activeAgent: agent }),
 
   conversations: mockConversations,
-  
+
   // Layout state
   leftPanelWidth: 400,
   setLeftPanelWidth: (width) => set({ leftPanelWidth: width }),
+
+  // Weave Backend Integration
+  weave: {
+    currentAgentLevel: 1,
+    entrySessionId: null,
+    entryOutput: null,
+    characterId: null,
+    characterCheckpoints: [],
+    sceneProjectId: null,
+    isProcessing: false,
+    error: null,
+  },
+
+  setCurrentAgentLevel: (level) =>
+    set((state) => ({
+      weave: { ...state.weave, currentAgentLevel: level },
+    })),
+
+  setEntrySessionId: (id) =>
+    set((state) => ({
+      weave: { ...state.weave, entrySessionId: id },
+    })),
+
+  setEntryOutput: (output) =>
+    set((state) => ({
+      weave: { ...state.weave, entryOutput: output },
+    })),
+
+  setCharacterId: (id) =>
+    set((state) => ({
+      weave: { ...state.weave, characterId: id },
+    })),
+
+  addCharacterCheckpoint: (checkpoint) =>
+    set((state) => ({
+      weave: {
+        ...state.weave,
+        characterCheckpoints: [...state.weave.characterCheckpoints, checkpoint],
+      },
+    })),
+
+  setSceneProjectId: (id) =>
+    set((state) => ({
+      weave: { ...state.weave, sceneProjectId: id },
+    })),
+
+  setProcessing: (isProcessing) =>
+    set((state) => ({
+      weave: { ...state.weave, isProcessing },
+    })),
+
+  setError: (error) =>
+    set((state) => ({
+      weave: { ...state.weave, error },
+    })),
+
+  // Initialize the agent tree structure based on AgentLevel enum
+  initializeAgentTree: () =>
+    set(() => ({
+      nodes: [
+        {
+          id: 'agent-1',
+          name: 'Entry Agent',
+          status: 'active',
+          progress: 0,
+          description: 'Gathering story concept and characters',
+          importance: 'Starting point for video creation',
+          agentLevel: 1,
+        },
+        {
+          id: 'agent-2',
+          name: 'Character Identity',
+          status: 'pending',
+          progress: 0,
+          parent: 'agent-1',
+          description: 'Deep character development in 3 waves with 7 checkpoints',
+          importance: 'Builds consistent character profiles',
+          agentLevel: 2,
+        },
+        {
+          id: 'agent-3',
+          name: 'Scene Creator',
+          status: 'pending',
+          progress: 0,
+          parent: 'agent-2',
+          description: 'Refine scenes with cinematography details',
+          importance: 'Production-ready scene descriptions',
+          agentLevel: 3,
+        },
+      ],
+    })),
 }));
