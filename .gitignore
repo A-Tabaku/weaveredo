@@ -47,6 +47,9 @@ local.env
 .pytest_cache/
 .coverage
 htmlcov/
+test_output/
+test_*.py
+*_test.py
 
 # Jupyter Notebook
 .ipynb_checkpoints

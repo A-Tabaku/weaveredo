@@ -9,6 +9,9 @@ google-genai>=0.8.0
 # Image processing
 pillow>=10.0.0
 
+# Environment variables
+python-dotenv>=1.0.0
+
 # For API layer (uncomment when implementing frontend integration)
 # fastapi>=0.104.0
 # uvicorn>=0.24.0

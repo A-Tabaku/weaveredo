@@ -16,6 +16,11 @@ from .subagents.subagent import (
     visual_continuity_checker
 )
 
+# Import Veo video generator tool
+import sys
+sys.path.append('../..')
+from tools.veo_video_generator import veo_video_generator, VEO_TOOL
+
 
 # Tool definitions in Anthropic format
 TOOLS = [
@@ -179,7 +184,8 @@ TOOLS = [
             },
             "required": ["generated_video_data", "scene_json"]
         }
-    }
+    },
+    VEO_TOOL  # Veo 3.1 video generation tool
 ]
 
 
@@ -239,6 +245,17 @@ async def execute_tool(tool_name: str, **kwargs) -> str:
             generated_video_data=kwargs.get("generated_video_data", ""),
             scene_json=kwargs.get("scene_json", ""),
             character_references=kwargs.get("character_references", None)
+        )
+
+    elif tool_name == "veo_video_generator":
+        return await veo_video_generator(
+            prompt=kwargs.get("prompt", ""),
+            image_paths=kwargs.get("image_paths", []),
+            resolution=kwargs.get("resolution", "720p"),
+            duration_seconds=kwargs.get("duration_seconds", 8),
+            negative_prompt=kwargs.get("negative_prompt", None),
+            enhance_prompt=kwargs.get("enhance_prompt", True),
+            model=kwargs.get("model", "veo-3.1-fast-generate-preview")
         )
 
     else:
