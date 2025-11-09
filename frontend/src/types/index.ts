@@ -7,10 +7,15 @@ export interface TreeNode {
   parent?: string;
   description?: string;
   importance?: string;
+  agentLevel?: number; // AgentLevel enum value (1, 2, 3)
+  checkpointNumber?: number; // For Character Identity checkpoints
   metadata?: {
     workingOn?: string;
     estimatedTime?: string;
     lastUpdate?: string;
+    wave?: number; // For Character Identity waves
+    sessionId?: string; // Entry or Scene session ID
+    characterId?: string; // Character development ID
   };
 }
 
